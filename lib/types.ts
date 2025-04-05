@@ -22,10 +22,12 @@ export interface Topping {
   active: boolean
 }
 
+// Actualizar la interfaz Presentation para incluir el campo name
 export interface Presentation {
   id: string
   productId: string
   product: Product
+  name: string
   quantity: number
   price: number
   description: string
