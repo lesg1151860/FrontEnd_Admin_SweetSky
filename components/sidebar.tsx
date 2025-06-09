@@ -6,7 +6,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { CakeSlice, ChefHat, Coffee, DollarSign, FileText, Home, Menu, Package, X } from "lucide-react"
+import { CakeSlice, ChefHat, Coffee, DollarSign, FileText, Home, Menu, Package, X, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 
@@ -41,6 +41,11 @@ const navItems: NavItem[] = [
     title: "Presentaciones",
     href: "/dashboard/presentaciones",
     icon: <Package className="h-5 w-5" />,
+  },
+  {
+    title: "Promociones",
+    href: "/dashboard/promociones",
+    icon: <Tag className="h-5 w-5" />,
   },
   {
     title: "Movimientos",
@@ -106,4 +111,3 @@ export function Sidebar() {
     </>
   )
 }
-
