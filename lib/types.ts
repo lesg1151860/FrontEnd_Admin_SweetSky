@@ -50,3 +50,18 @@ export interface ReportFilter {
   month?: number
 }
 
+// Nueva interfaz para las promociones
+export interface Promotion {
+  id: string
+  title: string
+  presentationId: string
+  presentation: Presentation
+  discountPercentage: number
+  originalPrice: number
+  discountedPrice: number
+  twoForOneToppings: boolean
+  twoForOneSauces: boolean
+  active: boolean
+  startDate: Date
+  endDate: Date | null
+}
