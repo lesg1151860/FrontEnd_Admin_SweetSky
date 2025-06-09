@@ -5,7 +5,16 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
-import { CakeIcon, SoupIcon, CandyIcon, PackageIcon, BarChart3Icon, FileTextIcon, LogOutIcon } from "lucide-react"
+import {
+  CakeIcon,
+  SoupIcon,
+  CandyIcon,
+  PackageIcon,
+  BarChart3Icon,
+  FileTextIcon,
+  LogOutIcon,
+  TagIcon,
+} from "lucide-react"
 
 export function MainNav() {
   const pathname = usePathname()
@@ -41,6 +50,12 @@ export function MainNav() {
       label: "Presentaciones",
       icon: <PackageIcon className="mr-2 h-4 w-4" />,
       active: pathname === "/presentaciones",
+    },
+    {
+      href: "/promociones",
+      label: "Promociones",
+      icon: <TagIcon className="mr-2 h-4 w-4" />,
+      active: pathname === "/promociones",
     },
     {
       href: "/movimientos",
@@ -84,4 +99,3 @@ export function MainNav() {
     </nav>
   )
 }
-

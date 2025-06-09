@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,10 +17,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusIcon } from "lucide-react"
+import { PlusIcon, FilterIcon, PencilIcon, TrashIcon } from "lucide-react"
 import type { Movement, MovementType } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+// Asegurarse de que useToast está importado
+import { useToast } from "@/hooks/use-toast"
 
 // Datos de ejemplo
 const initialMovements: Movement[] = [
@@ -63,6 +76,22 @@ export default function MovimientosPage() {
     date: new Date(),
   })
   const [open, setOpen] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [currentId, setCurrentId] = useState<string | null>(null)
+  const [movementFilter, setMovementFilter] = useState<"todos" | "ingreso" | "egreso">("todos")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [movementToDelete, setMovementToDelete] = useState<string | null>(null)
+
+  // Añadir el hook useToast
+  const { toast } = useToast()
+
+  // Filtrar movimientos según el tipo seleccionado
+  const filteredMovements = useMemo(() => {
+    if (movementFilter === "todos") {
+      return movements
+    }
+    return movements.filter((m) => m.type === movementFilter)
+  }, [movements, movementFilter])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -79,8 +108,36 @@ export default function MovimientosPage() {
     })
   }
 
-  const handleAddMovement = () => {
-    if (newMovement.type && newMovement.amount && newMovement.description) {
+  const handleAddOrUpdateMovement = () => {
+    if (!newMovement.type || !newMovement.amount || !newMovement.description) {
+      toast({
+        title: "Error",
+        description: "Todos los campos son obligatorios",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (editMode && currentId) {
+      // Actualizar movimiento existente
+      setMovements(
+        movements.map((movement) =>
+          movement.id === currentId
+            ? {
+                ...movement,
+                type: newMovement.type as MovementType,
+                amount: newMovement.amount as number,
+                description: newMovement.description as string,
+              }
+            : movement,
+        ),
+      )
+      toast({
+        title: "Movimiento actualizado",
+        description: "El movimiento ha sido actualizado correctamente",
+      })
+    } else {
+      // Crear nuevo movimiento
       const newId = (movements.length + 1).toString()
       setMovements([
         ...movements,
@@ -92,14 +149,49 @@ export default function MovimientosPage() {
           date: new Date(),
         },
       ])
-
-      setNewMovement({
-        type: "ingreso",
-        amount: 0,
-        description: "",
-        date: new Date(),
+      toast({
+        title: "Movimiento registrado",
+        description: `El ${newMovement.type === "ingreso" ? "ingreso" : "egreso"} ha sido registrado correctamente`,
       })
-      setOpen(false)
+    }
+
+    // Resetear el formulario y cerrar el diálogo
+    setNewMovement({
+      type: "ingreso",
+      amount: 0,
+      description: "",
+      date: new Date(),
+    })
+    setOpen(false)
+    setEditMode(false)
+    setCurrentId(null)
+  }
+
+  const handleEdit = (movement: Movement) => {
+    setNewMovement({
+      type: movement.type,
+      amount: movement.amount,
+      description: movement.description,
+    })
+    setEditMode(true)
+    setCurrentId(movement.id)
+    setOpen(true)
+  }
+
+  const handleDelete = (id: string) => {
+    setMovementToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = () => {
+    if (movementToDelete) {
+      setMovements(movements.filter((movement) => movement.id !== movementToDelete))
+      toast({
+        title: "Movimiento eliminado",
+        description: "El movimiento ha sido eliminado correctamente",
+      })
+      setDeleteDialogOpen(false)
+      setMovementToDelete(null)
     }
   }
 
@@ -123,7 +215,7 @@ export default function MovimientosPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Registrar Nuevo Movimiento</DialogTitle>
+              <DialogTitle>{editMode ? "Editar" : "Registrar Nuevo"} Movimiento</DialogTitle>
               <DialogDescription>Complete los detalles del movimiento financiero.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -162,15 +254,59 @@ export default function MovimientosPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setOpen(false)
+                  setEditMode(false)
+                  setCurrentId(null)
+                  setNewMovement({
+                    type: "ingreso",
+                    amount: 0,
+                    description: "",
+                    date: new Date(),
+                  })
+                }}
+              >
                 Cancelar
               </Button>
-              <Button className="bg-primary hover:bg-primary/90" onClick={handleAddMovement}>
-                Registrar
+              <Button className="bg-primary hover:bg-primary/90" onClick={handleAddOrUpdateMovement}>
+                {editMode ? "Actualizar" : "Registrar"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
+
+      {/* Añadir el componente de filtro aquí */}
+      <div className="flex items-center space-x-2 bg-white p-4 rounded-md border">
+        <FilterIcon className="h-5 w-5 text-sweetBrown" />
+        <div className="font-medium text-sm">Filtrar por tipo:</div>
+        <div className="w-64">
+          <Select
+            value={movementFilter}
+            onValueChange={(value: "todos" | "ingreso" | "egreso") => setMovementFilter(value)}
+          >
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Seleccione un tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los movimientos</SelectItem>
+              <SelectItem value="ingreso">Ingresos</SelectItem>
+              <SelectItem value="egreso">Egresos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {movementFilter !== "todos" && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMovementFilter("todos")}
+            className="text-xs text-muted-foreground"
+          >
+            Limpiar filtro
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -210,33 +346,71 @@ export default function MovimientosPage() {
               <TableHead>Descripción</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead className="text-right">Monto</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {movements.map((movement) => (
-              <TableRow key={movement.id}>
-                <TableCell>{movement.date.toLocaleDateString()}</TableCell>
-                <TableCell>{movement.description}</TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      movement.type === "ingreso" ? "bg-success/20 text-success" : "bg-error/20 text-error"
-                    }`}
+            {filteredMovements.length > 0 ? (
+              filteredMovements.map((movement) => (
+                <TableRow key={movement.id}>
+                  <TableCell>{movement.date.toLocaleDateString()}</TableCell>
+                  <TableCell>{movement.description}</TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        movement.type === "ingreso" ? "bg-success/20 text-success" : "bg-error/20 text-error"
+                      }`}
+                    >
+                      {movement.type === "ingreso" ? "Ingreso" : "Egreso"}
+                    </span>
+                  </TableCell>
+                  <TableCell
+                    className={`text-right font-medium ${movement.type === "ingreso" ? "text-success" : "text-error"}`}
                   >
-                    {movement.type === "ingreso" ? "Ingreso" : "Egreso"}
-                  </span>
-                </TableCell>
-                <TableCell
-                  className={`text-right font-medium ${movement.type === "ingreso" ? "text-success" : "text-error"}`}
-                >
-                  {movement.type === "ingreso" ? "+" : "-"}${movement.amount.toLocaleString()}
+                    {movement.type === "ingreso" ? "+" : "-"}${movement.amount.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(movement)}>
+                        <PencilIcon className="h-4 w-4" />
+                        <span className="sr-only">Editar</span>
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(movement.id)}>
+                        <TrashIcon className="h-4 w-4 text-error" />
+                        <span className="sr-only">Eliminar</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                  No hay movimientos {movementFilter !== "todos" ? `de tipo ${movementFilter}` : ""} para mostrar.
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El movimiento será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setMovementToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-error hover:bg-error/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
-

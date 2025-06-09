@@ -18,6 +18,7 @@ import {
 import { PlusIcon } from "lucide-react"
 import type { Sauce } from "@/lib/types"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 // Datos de ejemplo
 const initialSauces: Sauce[] = [
@@ -32,18 +33,34 @@ export default function SalsasPage() {
   const [sauces, setSauces] = useState<Sauce[]>(initialSauces)
   const [newSauce, setNewSauce] = useState({ name: "" })
   const [open, setOpen] = useState(false)
+  const { toast } = useToast()
 
   const handleToggleActive = (id: number) => {
     setSauces(sauces.map((sauce) => (sauce.id === id ? { ...sauce, active: !sauce.active } : sauce)))
+    toast({
+      title: "Estado actualizado",
+      description: "El estado de la salsa ha sido actualizado correctamente",
+    })
   }
 
   const handleAddSauce = () => {
-    if (newSauce.name.trim()) {
-      const newId = sauces.length > 0 ? Math.max(...sauces.map((s) => s.id)) + 1 : 1
-      setSauces([...sauces, { id: newId, name: newSauce.name, active: true }])
-      setNewSauce({ name: "" })
-      setOpen(false)
+    if (!newSauce.name.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre de la salsa no puede estar vacío",
+        variant: "destructive",
+      })
+      return
     }
+
+    const newId = sauces.length > 0 ? Math.max(...sauces.map((s) => s.id)) + 1 : 1
+    setSauces([...sauces, { id: newId, name: newSauce.name, active: true }])
+    setNewSauce({ name: "" })
+    setOpen(false)
+    toast({
+      title: "Salsa creada",
+      description: "La salsa ha sido creada correctamente",
+    })
   }
 
   return (

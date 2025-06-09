@@ -18,6 +18,7 @@ import {
 import { PlusIcon } from "lucide-react"
 import type { Topping } from "@/lib/types"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 // Datos de ejemplo
 const initialToppings: Topping[] = [
@@ -32,18 +33,34 @@ export default function ToppingsPage() {
   const [toppings, setToppings] = useState<Topping[]>(initialToppings)
   const [newTopping, setNewTopping] = useState({ name: "" })
   const [open, setOpen] = useState(false)
+  const { toast } = useToast()
 
   const handleToggleActive = (id: number) => {
     setToppings(toppings.map((topping) => (topping.id === id ? { ...topping, active: !topping.active } : topping)))
+    toast({
+      title: "Estado actualizado",
+      description: "El estado del topping ha sido actualizado correctamente",
+    })
   }
 
   const handleAddTopping = () => {
-    if (newTopping.name.trim()) {
-      const newId = toppings.length > 0 ? Math.max(...toppings.map((t) => t.id)) + 1 : 1
-      setToppings([...toppings, { id: newId, name: newTopping.name, active: true }])
-      setNewTopping({ name: "" })
-      setOpen(false)
+    if (!newTopping.name.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre del topping no puede estar vacío",
+        variant: "destructive",
+      })
+      return
     }
+
+    const newId = toppings.length > 0 ? Math.max(...toppings.map((t) => t.id)) + 1 : 1
+    setToppings([...toppings, { id: newId, name: newTopping.name, active: true }])
+    setNewTopping({ name: "" })
+    setOpen(false)
+    toast({
+      title: "Topping creado",
+      description: "El topping ha sido creado correctamente",
+    })
   }
 
   return (

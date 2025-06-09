@@ -18,6 +18,7 @@ import {
 import { PlusIcon } from "lucide-react"
 import type { Product } from "@/lib/types"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 // Datos de ejemplo
 const initialProducts: Product[] = [
@@ -32,18 +33,34 @@ export default function ProductosPage() {
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [newProduct, setNewProduct] = useState({ name: "" })
   const [open, setOpen] = useState(false)
+  const { toast } = useToast()
 
   const handleToggleActive = (id: string) => {
     setProducts(products.map((product) => (product.id === id ? { ...product, active: !product.active } : product)))
+    toast({
+      title: "Estado actualizado",
+      description: "El estado del producto ha sido actualizado correctamente",
+    })
   }
 
   const handleAddProduct = () => {
-    if (newProduct.name.trim()) {
-      const newId = (products.length + 1).toString()
-      setProducts([...products, { id: newId, name: newProduct.name, active: true }])
-      setNewProduct({ name: "" })
-      setOpen(false)
+    if (!newProduct.name.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre del producto no puede estar vacío",
+        variant: "destructive",
+      })
+      return
     }
+
+    const newId = (products.length + 1).toString()
+    setProducts([...products, { id: newId, name: newProduct.name, active: true }])
+    setNewProduct({ name: "" })
+    setOpen(false)
+    toast({
+      title: "Producto creado",
+      description: "El producto ha sido creado correctamente",
+    })
   }
 
   return (

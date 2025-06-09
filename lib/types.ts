@@ -22,10 +22,12 @@ export interface Topping {
   active: boolean
 }
 
+// Actualizar la interfaz Presentation para incluir el campo name
 export interface Presentation {
   id: string
   productId: string
   product: Product
+  name: string
   quantity: number
   price: number
   description: string
@@ -48,3 +50,18 @@ export interface ReportFilter {
   month?: number
 }
 
+// Nueva interfaz para las promociones
+export interface Promotion {
+  id: string
+  title: string
+  presentationId: string
+  presentation: Presentation
+  discountPercentage: number
+  originalPrice: number
+  discountedPrice: number
+  twoForOneToppings: boolean
+  twoForOneSauces: boolean
+  active: boolean
+  startDate: Date
+  endDate: Date | null
+}

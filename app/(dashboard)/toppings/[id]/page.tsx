@@ -12,6 +12,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { ArrowLeftIcon } from "lucide-react"
 import type { Topping } from "@/lib/types"
 
+// Asegurarse de que useToast está importado
+import { useToast } from "@/hooks/use-toast"
+
 // Datos de ejemplo
 const initialToppings: Topping[] = [
   { id: 1, name: "Chispas de Chocolate", active: true },
@@ -28,6 +31,9 @@ export default function EditToppingPage({ params }: { params: { id: string } }) 
     name: "",
     active: false,
   })
+
+  // Añadir el hook useToast
+  const { toast } = useToast()
 
   useEffect(() => {
     // En un caso real, aquí se haría una petición al backend
@@ -58,10 +64,24 @@ export default function EditToppingPage({ params }: { params: { id: string } }) 
     })
   }
 
+  // Modificar la función handleSave para mostrar notificación de éxito o error
   const handleSave = () => {
+    // Validar que el nombre no esté vacío
+    if (!formData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre del topping no puede estar vacío",
+        variant: "destructive",
+      })
+      return
+    }
+
     // En un caso real, aquí se enviarían los cambios al backend
     // Por ahora, simulamos la actualización
-    alert(`Topping actualizado: ${formData.name} - Estado: ${formData.active ? "Activo" : "Inactivo"}`)
+    toast({
+      title: "Topping actualizado",
+      description: `El topping "${formData.name}" ha sido actualizado correctamente`,
+    })
     router.push("/toppings")
   }
 

@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeftIcon } from "lucide-react"
 import type { Presentation, Product } from "@/lib/types"
 import Image from "next/image"
+// Asegurarse de que useToast está importado
+import { useToast } from "@/hooks/use-toast"
 
 // Datos de ejemplo
 const products: Product[] = [
@@ -68,6 +70,9 @@ export default function EditPresentationPage({ params }: { params: { id: string 
     active: false,
   })
 
+  // Añadir el hook useToast
+  const { toast } = useToast()
+
   useEffect(() => {
     // En un caso real, aquí se haría una petición al backend
     // Por ahora, simulamos la obtención de la presentación
@@ -107,12 +112,24 @@ export default function EditPresentationPage({ params }: { params: { id: string 
     })
   }
 
+  // Modificar la función handleSave para mostrar notificación de éxito o error
   const handleSave = () => {
+    // Validar campos obligatorios
+    if (!formData.productId || !formData.description || !formData.price) {
+      toast({
+        title: "Error",
+        description: "Todos los campos marcados son obligatorios",
+        variant: "destructive",
+      })
+      return
+    }
+
     // En un caso real, aquí se enviarían los cambios al backend
     // Por ahora, simulamos la actualización
-    alert(
-      `Presentación actualizada: ${products.find((p) => p.id === formData.productId)?.name} - Precio: $${formData.price}`,
-    )
+    toast({
+      title: "Presentación actualizada",
+      description: `La presentación ha sido actualizada correctamente`,
+    })
     router.push("/presentaciones")
   }
 
