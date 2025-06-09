@@ -24,6 +24,9 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 
+// Asegurarse de que useToast está importado
+import { useToast } from "@/hooks/use-toast"
+
 // Datos de ejemplo
 const products: Product[] = [
   { id: "1", name: "Torta de Chocolate", active: true },
@@ -137,12 +140,20 @@ export default function PresentacionesPage() {
     return presentations.filter((p) => p.productId === productFilter)
   }, [presentations, productFilter])
 
+  // Añadir el hook useToast
+  const { toast } = useToast()
+
+  // Modificar la función handleToggleActive para mostrar notificación
   const handleToggleActive = (id: string) => {
     setPresentations(
       presentations.map((presentation) =>
         presentation.id === id ? { ...presentation, active: !presentation.active } : presentation,
       ),
     )
+    toast({
+      title: "Estado actualizado",
+      description: "El estado de la presentación ha sido actualizado correctamente",
+    })
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -165,50 +176,66 @@ export default function PresentacionesPage() {
     setProductFilter(value)
   }
 
+  // Modificar la función handleAddPresentation para mostrar notificación de éxito o error
   const handleAddPresentation = () => {
-    if (newPresentation.productId && newPresentation.name && newPresentation.price && newPresentation.description) {
-      if (editMode && currentId) {
-        setPresentations(
-          presentations.map((presentation) =>
-            presentation.id === currentId
-              ? {
-                  ...presentation,
-                  ...newPresentation,
-                  product: products.find((p) => p.id === newPresentation.productId) as Product,
-                }
-              : presentation,
-          ),
-        )
-      } else {
-        const newId = (presentations.length + 1).toString()
-        setPresentations([
-          ...presentations,
-          {
-            id: newId,
-            productId: newPresentation.productId as string,
-            product: products.find((p) => p.id === newPresentation.productId) as Product,
-            name: newPresentation.name as string,
-            quantity: newPresentation.quantity as number,
-            price: newPresentation.price as number,
-            description: newPresentation.description as string,
-            imageUrl: "/placeholder.svg?height=200&width=200",
-            active: newPresentation.active as boolean,
-          },
-        ])
-      }
-
-      setNewPresentation({
-        productId: "",
-        name: "",
-        quantity: 1,
-        price: 0,
-        description: "",
-        active: true,
+    if (!newPresentation.productId || !newPresentation.name || !newPresentation.price || !newPresentation.description) {
+      toast({
+        title: "Error",
+        description: "Todos los campos marcados son obligatorios",
+        variant: "destructive",
       })
-      setOpen(false)
-      setEditMode(false)
-      setCurrentId(null)
+      return
     }
+
+    if (editMode && currentId) {
+      setPresentations(
+        presentations.map((presentation) =>
+          presentation.id === currentId
+            ? {
+                ...presentation,
+                ...newPresentation,
+                product: products.find((p) => p.id === newPresentation.productId) as Product,
+              }
+            : presentation,
+        ),
+      )
+      toast({
+        title: "Presentación actualizada",
+        description: "La presentación ha sido actualizada correctamente",
+      })
+    } else {
+      const newId = (presentations.length + 1).toString()
+      setPresentations([
+        ...presentations,
+        {
+          id: newId,
+          productId: newPresentation.productId as string,
+          product: products.find((p) => p.id === newPresentation.productId) as Product,
+          name: newPresentation.name as string,
+          quantity: newPresentation.quantity as number,
+          price: newPresentation.price as number,
+          description: newPresentation.description as string,
+          imageUrl: "/placeholder.svg?height=200&width=200",
+          active: newPresentation.active as boolean,
+        },
+      ])
+      toast({
+        title: "Presentación creada",
+        description: "La presentación ha sido creada correctamente",
+      })
+    }
+
+    setNewPresentation({
+      productId: "",
+      name: "",
+      quantity: 1,
+      price: 0,
+      description: "",
+      active: true,
+    })
+    setOpen(false)
+    setEditMode(false)
+    setCurrentId(null)
   }
 
   const handleEdit = (presentation: Presentation) => {
